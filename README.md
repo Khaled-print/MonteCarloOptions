@@ -4,6 +4,8 @@
 
 This repository contains a Python-based implementation of a **Monte Carlo Simulation** model for option pricing. The model focuses on pricing European Call and Put options using a Monte Carlo method, which simulates the price paths of the underlying asset through a Geometric Brownian Motion (GBM). Additionally, the model calculates the option Greeks (Delta, Gamma, Vega, Theta, and Rho), providing a comprehensive view of how various factors affect option prices.
 
+As part of my own venture into self-teaching Python for the quantitative finance industry, I decided to build this simple options pricer as an intro into Stochastic processes which I wish to delve into post-grad undertaking a masters in quantitative finance, until then here is my take on an options pricer. 
+
 ### What You’ll Find Here
 
 - **Monte Carlo Simulation**: A robust method for pricing derivatives, particularly when dealing with complex payoffs or when analytical solutions are impractical.
