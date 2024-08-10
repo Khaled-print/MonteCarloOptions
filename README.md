@@ -100,7 +100,7 @@ This Monte Carlo Option Pricing Model is a tool for evaluating European options 
 
 ### Inspiration
 
-The calculation methodology was inspired by QuantPy’s YouTube video on **Monte Carlo Simulation for Option Pricing with Python**. I thought it would be cool to create an interactive version that lets you play with variables interactively and also included a put option version to give a more complete tool for option pricing.
+The calculation methodology for the Monte Carlo was inspired by QuantPy’s YouTube video on **Monte Carlo Simulation for Stock Portfolio**. I thought it would be cool to create an interactive options version that lets you play with variables interactively and also included greeks, and ITM/OTM reports to give a more complete tool for option pricing.
 
 I have tweaked the initial calculation methodology to enable calculations for both 'call' and 'put' options. The code, unlike the original, will prompt the user for input variables, run said variables through GBM & Payoff calculations, and produce values and a plotted Monte Carlo distribution. Additionally, the inclusion of option Greeks makes the tool more robust and informative for practical use, particularly in risk management and trading strategies. 
 
