@@ -105,7 +105,7 @@ with st.sidebar.expander("Option Parameters", expanded=True):
 
 with st.sidebar.expander("Simulation Parameters", expanded=False):
     N = st.slider("Number of Time Steps (N)", min_value=1, max_value=365, value=252, step=1)
-    M = st.slider("Number of Simulations (M)", min_value=1000, max_value=50000, value=10000, step=1000)
+    M = st.slider("Number of Simulations (M)", min_value=100, max_value=1000, value=500, step=100)
     market_value = st.number_input("Market Value of Option", value=10.0)
 
 with st.sidebar.expander("Dates", expanded=False):
