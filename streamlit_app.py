@@ -91,13 +91,9 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     sigma_put = np.sqrt(np.sum((PT - P0)**2) / (M - 1))
     SE_put = sigma_put / np.sqrt(M)
 
-    # Profitability data
-    profit_call = CT - market_value
-    profit_put = PT - market_value
-
-    # Calculate the average break-even point where profit becomes positive
-    breakeven_call = np.mean(ST[-1][profit_call > 0])
-    breakeven_put = np.mean(ST[-1][profit_put > 0])
+    # Simple Break-Even Data
+    breakeven_call = np.mean(ST[-1][ST[-1] > K])
+    breakeven_put = np.mean(ST[-1][ST[-1] < K])
 
     # Calculate ITM and OTM counts
     itm_calls = np.sum(ST[-1] > K)
@@ -166,15 +162,7 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     P0_up = np.exp(-r_up * T) * np.sum(PT_up) / M
     rho_put = (P0_up - P0) / epsilon
 
-    # Expected Profit/Loss
-    expected_profit_call = np.mean(profit_call)
-    expected_profit_put = np.mean(profit_put)
-
-    # Probability of Profit
-    prob_profit_call = np.sum(profit_call > 0) / M * 100
-    prob_profit_put = np.sum(profit_put > 0) / M * 100
-
-    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, expected_profit_call, expected_profit_put, prob_profit_call, prob_profit_put, breakeven_call, breakeven_put
+    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, breakeven_call, breakeven_put
 
 # Sidebar for User Inputs
 st.sidebar.title("📊 Monte Carlo Model")
@@ -199,7 +187,7 @@ with st.sidebar.expander("Dates", expanded=False):
     end_date = st.date_input("End Date", datetime.date(2025, 1, 1))
 
 # Add a dropdown to select which plot to display
-plot_type = st.selectbox("Select Plot Type", ["Option Pricing Distribution", "Profitability Analysis"])
+plot_type = st.selectbox("Select Plot Type", ["Option Pricing Distribution", "Break-Even Analysis"])
 
 # Main Page for Output Display
 st.title("Monte Carlo Pricing Model with Greeks")
@@ -208,7 +196,7 @@ st.title("Monte Carlo Pricing Model with Greeks")
 results = monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, start_date, end_date)
 (C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, 
  delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, 
- expected_profit_call, expected_profit_put, prob_profit_call, prob_profit_put, breakeven_call, breakeven_put) = results
+ breakeven_call, breakeven_put) = results
 
 # Display Call and Put Values with Standard Errors in colored tables
 col1, col2 = st.columns(2)
@@ -224,8 +212,6 @@ with col1:
     """, unsafe_allow_html=True)
 
     st.write(f"**Break-Even Point (Call):** ${breakeven_call:.2f}")
-    st.write(f"**Expected Profit (Call):** ${expected_profit_call:.2f}")
-    st.write(f"**Probability of Profit (Call):** {prob_profit_call:.2f}%")
 
 with col2:
     st.markdown(f"""
@@ -238,8 +224,6 @@ with col2:
     """, unsafe_allow_html=True)
 
     st.write(f"**Break-Even Point (Put):** ${breakeven_put:.2f}")
-    st.write(f"**Expected Profit (Put):** ${expected_profit_put:.2f}")
-    st.write(f"**Probability of Profit (Put):** {prob_profit_put:.2f}%")
 
 # ITM and OTM details in an expander
 with st.expander("In the Money (ITM) and Out of the Money (OTM) Percentages", expanded=False):
@@ -298,21 +282,20 @@ if plot_type == "Option Pricing Distribution":
 
     st.plotly_chart(fig, use_container_width=True)
 
-elif plot_type == "Profitability Analysis":
+elif plot_type == "Break-Even Analysis":
     fig = go.Figure()
 
-    # Profit/Loss Distribution for Call Option
-    fig.add_trace(go.Histogram(x=profit_call, name="Call Option Profit/Loss", marker_color='#4CAF50'))
+    # Break-Even Plot for Call Option
+    fig.add_trace(go.Scatter(x=ST[-1], y=CT, mode='markers', name="Call Option", marker=dict(color='#4CAF50')))
 
-    # Profit/Loss Distribution for Put Option
-    fig.add_trace(go.Histogram(x=profit_put, name="Put Option Profit/Loss", marker_color='#F44336'))
+    # Break-Even Plot for Put Option
+    fig.add_trace(go.Scatter(x=ST[-1], y=PT, mode='markers', name="Put Option", marker=dict(color='#F44336')))
 
-    fig.update_layout(title='Profitability Analysis', xaxis_title='Profit/Loss', yaxis_title='Frequency',
+    fig.add_hline(y=market_value, line=dict(color='#2196F3', dash='dash'), annotation_text='Market Value', annotation_position='top right')
+
+    fig.update_layout(title='Break-Even Analysis', xaxis_title='Underlying Asset Price', yaxis_title='Option Payoff',
                       legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, traceorder="normal"),
                       template='plotly_white',
-                      margin=dict(l=50, r=50, t=50, b=50),
-                      barmode='overlay')
-
-    fig.update_traces(opacity=0.75)
+                      margin=dict(l=50, r=50, t=50, b=50))
 
     st.plotly_chart(fig, use_container_width=True)
