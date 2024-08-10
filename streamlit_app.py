@@ -80,7 +80,7 @@ with st.sidebar:
     st.title("📊 Monte Carlo Model")
     st.write("`Created by:`")
     linkedin_url = "www.linkedin.com/in/khaled-sahbi-161329200"
-    st.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decoration: none; color: inherit;"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="25" height="25" style="vertical-align: middle; margin-right: 10px;">`Prudhvi Reddy, Muppala`</a>', unsafe_allow_html=True)
+    st.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decoration: none; color: inherit;"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="25" height="25" style="vertical-align: middle; margin-right: 10px;">`Khaled Sahbi`</a>', unsafe_allow_html=True)
 
     S = st.number_input("Current Asset Price", value=101.15)
     K = st.number_input("Strike Price", value=98.01)
