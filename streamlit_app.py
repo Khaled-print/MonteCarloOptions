@@ -178,3 +178,4 @@ fig.update_layout(title='Option Pricing Distribution',
 fig.update_annotations(dict(font_size=12, arrowcolor="rgba(0,0,0,0)"))
 
 st.plotly_chart(fig, use_container_width=True)
+
