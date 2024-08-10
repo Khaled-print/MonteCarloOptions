@@ -88,7 +88,13 @@ def monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end
     sigma_put = np.sqrt(np.sum((PT - P0)**2) / (M - 1))
     SE_put = sigma_put / np.sqrt(M)
 
-    return C0, SE_call, P0, SE_put
+    # Calculate ITM and OTM
+    itm_calls = np.sum(ST[-1] > K)
+    otm_calls = np.sum(ST[-1] <= K)
+    itm_puts = np.sum(ST[-1] < K)
+    otm_puts = np.sum(ST[-1] >= K)
+
+    return C0, SE_call, P0, SE_put, itm_calls, otm_calls, itm_puts, otm_puts
 
 # Sidebar for User Inputs
 st.sidebar.title("📊 Monte Carlo Model")
@@ -113,10 +119,10 @@ with st.sidebar.expander("Dates", expanded=False):
     end_date = st.date_input("End Date", datetime.date(2025, 1, 1))
 
 # Main Page for Output Display
-st.title("Monte Carlo European Pricing Model")
+st.title("Monte Carlo Pricing Model")
 
 # Calculate Call and Put values using Monte Carlo simulation
-C0, SE_call, P0, SE_put = monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date)
+C0, SE_call, P0, SE_put, itm_calls, otm_calls, itm_puts, otm_puts = monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date)
 
 # Display Call and Put Values with Standard Errors in colored tables
 col1, col2 = st.columns(2)
@@ -140,6 +146,11 @@ with col2:
             </div>
         </div>
     """, unsafe_allow_html=True)
+
+# Display ITM and OTM
+st.subheader("In the Money (ITM) and Out of the Money (OTM) Counts")
+st.write(f"**Call Options:** ITM: {itm_calls}, OTM: {otm_calls}")
+st.write(f"**Put Options:** ITM: {itm_puts}, OTM: {otm_puts}")
 
 # Display Market Value for comparison
 st.write(f"Market Value of the Option: ${market_value:.2f}")
@@ -166,14 +177,4 @@ fig.add_vline(x=market_value, line=dict(color='#2196F3'), annotation_text='Marke
 
 # Improving the aesthetics
 fig.update_layout(title='Option Pricing Distribution',
-                  xaxis_title='Option Price',
-                  yaxis_title='Probability Density',
-                  legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, traceorder="normal"),
-                  template='plotly_white',
-                  margin=dict(l=50, r=50, t=50, b=50))
-
-# Update annotations to avoid overlap
-fig.update_annotations(dict(font_size=12, arrowcolor="rgba(0,0,0,0)"))
-
-st.plotly_chart(fig, use_container_width=True)
-
+                 
