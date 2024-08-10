@@ -10,7 +10,8 @@ st.set_page_config(
     page_title="Interactive Monte Carlo Option Pricing with Greeks",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded")
+    initial_sidebar_state="expanded"
+)
 
 # Custom CSS to inject into Streamlit
 st.markdown("""
@@ -90,6 +91,10 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     sigma_put = np.sqrt(np.sum((PT - P0)**2) / (M - 1))
     SE_put = sigma_put / np.sqrt(M)
 
+    # Profitability data
+    profit_call = CT - market_value
+    profit_put = PT - market_value
+
     # Calculate ITM and OTM counts
     itm_calls = np.sum(ST[-1] > K)
     otm_calls = np.sum(ST[-1] <= K)
@@ -157,13 +162,13 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     P0_up = np.exp(-r_up * T) * np.sum(PT_up) / M
     rho_put = (P0_up - P0) / epsilon
 
-    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put
+    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, profit_call, profit_put
 
 # Sidebar for User Inputs
 st.sidebar.title("📊 Monte Carlo Model")
-st.sidebar.write("Created by:")
+st.sidebar.write("`Created by:`")
 linkedin_url = "www.linkedin.com/in/khaled-sahbi-161329200"
-st.sidebar.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decoration: none; color: inherit;"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="25" height="25" style="vertical-align: middle; margin-right: 10px;">Khaled Sahbi</a>', unsafe_allow_html=True)
+st.sidebar.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decoration: none; color: inherit;"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="25" height="25" style="vertical-align: middle; margin-right: 10px;">`Khaled Sahbi`</a>', unsafe_allow_html=True)
 
 # Using expanders to make the interface less compact
 with st.sidebar.expander("Option Parameters", expanded=True):
@@ -181,13 +186,17 @@ with st.sidebar.expander("Dates", expanded=False):
     start_date = st.date_input("Start Date", datetime.date(2024, 1, 1))
     end_date = st.date_input("End Date", datetime.date(2025, 1, 1))
 
+# Add a dropdown to select which plot to display
+plot_type = st.selectbox("Select Plot Type", ["Option Pricing Distribution", "Profitability Analysis"])
+
 # Main Page for Output Display
 st.title("Monte Carlo Pricing Model with Greeks")
 
 # Calculate Call and Put values using Monte Carlo simulation
 results = monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, start_date, end_date)
 (C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, 
- delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put) = results
+ delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, 
+ profit_call, profit_put) = results
 
 # Display Call and Put Values with Standard Errors in colored tables
 col1, col2 = st.columns(2)
@@ -236,34 +245,55 @@ with col2:
     st.write(f"**Theta (Put):** {theta_put:.4f}")
     st.write(f"**Rho (Put):** {rho_put:.4f}")
 
-# Interactive Plot with Plotly
-x_call = np.linspace(C0 - 3 * SE_call, C0 + 3 * SE_call, 100)
-y_call = stats.norm.pdf(x_call, C0, SE_call)
+# Display the selected plot type
+if plot_type == "Option Pricing Distribution":
+    x_call = np.linspace(C0 - 3 * SE_call, C0 + 3 * SE_call, 100)
+    y_call = stats.norm.pdf(x_call, C0, SE_call)
 
-x_put = np.linspace(P0 - 3 * SE_put, P0 + 3 * SE_put, 100)
-y_put = stats.norm.pdf(x_put, P0, SE_put)
+    x_put = np.linspace(P0 - 3 * SE_put, P0 + 3 * SE_put, 100)
+    y_put = stats.norm.pdf(x_put, P0, SE_put)
 
-fig = go.Figure()
+    fig = go.Figure()
 
-# Call Option Plot
-fig.add_trace(go.Scatter(x=x_call, y=y_call, mode='lines', name='Call Option', line=dict(color='#4CAF50', width=2)))
+    # Call Option Plot
+    fig.add_trace(go.Scatter(x=x_call, y=y_call, mode='lines', name='Call Option', line=dict(color='#4CAF50', width=2)))
 
-# Put Option Plot
-fig.add_trace(go.Scatter(x=x_put, y=y_put, mode='lines', name='Put Option', line=dict(color='#F44336', width=2)))
+    # Put Option Plot
+    fig.add_trace(go.Scatter(x=x_put, y=y_put, mode='lines', name='Put Option', line=dict(color='#F44336', width=2)))
 
-# Vertical Lines
-fig.add_vline(x=C0, line=dict(color='#4CAF50', dash='dash'), annotation_text='Call Value', annotation_position='top right')
-fig.add_vline(x=P0, line=dict(color='#F44336', dash='dash'), annotation_text='Put Value', annotation_position='top left')
-fig.add_vline(x=market_value, line=dict(color='#2196F3'), annotation_text='Market Value', annotation_position='top right')
+    # Vertical Lines
+    fig.add_vline(x=C0, line=dict(color='#4CAF50', dash='dash'), annotation_text='Call Value', annotation_position='top right')
+    fig.add_vline(x=P0, line=dict(color='#F44336', dash='dash'), annotation_text='Put Value', annotation_position='top left')
+    fig.add_vline(x=market_value, line=dict(color='#2196F3'), annotation_text='Market Value', annotation_position='top right')
 
-# Improving the aesthetics
-fig.update_layout(title='Option Pricing Distribution',xaxis_title='Option Price',
-                  yaxis_title='Probability Density',
-                  legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, traceorder="normal"),
-                  template='plotly_white',
-                  margin=dict(l=50, r=50, t=50, b=50))
+    # Improving the aesthetics
+    fig.update_layout(title='Option Pricing Distribution',xaxis_title='Option Price',
+                      yaxis_title='Probability Density',
+                      legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, traceorder="normal"),
+                      template='plotly_white',
+                      margin=dict(l=50, r=50, t=50, b=50))
 
-# Update annotations to avoid overlap
-fig.update_annotations(dict(font_size=12, arrowcolor="rgba(0,0,0,0)"))
+    # Update annotations to avoid overlap
+    fig.update_annotations(dict(font_size=12, arrowcolor="rgba(0,0,0,0)"))
 
-st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
+
+elif plot_type == "Profitability Analysis":
+    fig = go.Figure()
+
+    # Profitability Plot for Call Option
+    fig.add_trace(go.Histogram(x=profit_call, name="Call Option Profitability", marker_color='#4CAF50'))
+
+    # Profitability Plot for Put Option
+    fig.add_trace(go.Histogram(x=profit_put, name="Put Option Profitability", marker_color='#F44336'))
+
+    fig.update_layout(title='Profitability Analysis', xaxis_title='Profit/Loss', yaxis_title='Frequency',
+                      legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, traceorder="normal"),
+                      template='plotly_white',
+                      margin=dict(l=50, r=50, t=50, b=50),
+                      barmode='overlay')
+
+    fig.update_traces(opacity=0.75)
+
+    st.plotly_chart(fig, use_container_width=True)
+
