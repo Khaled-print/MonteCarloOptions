@@ -106,6 +106,9 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     call_profitability_point = K + C0
     put_profitability_point = K - P0
 
+    # Define a small epsilon for Greeks calculation
+    epsilon = S * 0.01
+
     # Greeks Calculation
     delta_call = np.mean(ST[-1] > K)
     delta_put = np.mean(ST[-1] < K)
