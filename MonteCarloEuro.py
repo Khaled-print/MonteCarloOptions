@@ -6,7 +6,7 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 from pandas_datareader import data as pdr
 
-def monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date):
+def monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date, option_type):
     # Calculate the time to maturity in years
     T = (end_date - start_date).days / 365.0
     print(f"Time to maturity (T) is: {T} years")
@@ -23,15 +23,22 @@ def monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end
     lnSt = lnS + np.cumsum(delta_lnSt, axis=0)
     lnSt = np.concatenate((np.full(shape=(1, M), fill_value=lnS), lnSt))
 
-    # Compute Expectation and SE
+    # Compute Expectation and SE based on option type
     ST = np.exp(lnSt)
-    CT = np.maximum(0, ST[-1] - K)
+    if option_type.lower() == 'call':
+        CT = np.maximum(0, ST[-1] - K)
+    elif option_type.lower() == 'put':
+        CT = np.maximum(0, K - ST[-1])
+    else:
+        print("Invalid option type. Please choose 'call' or 'put'.")
+        return
+
     C0 = np.exp(-r * T) * np.sum(CT) / M
 
     sigma = np.sqrt(np.sum((CT - C0)**2) / (M - 1))
     SE = sigma / np.sqrt(M)
 
-    print("Call value is ${0} with SE +/- {1}".format(np.round(C0, 2), np.round(SE, 2)))
+    print(f"{option_type.capitalize()} value is ${np.round(C0, 2)} with SE +/- ${np.round(SE, 2)}")
 
     # Plotting the results
     x1 = np.linspace(C0 - 3 * SE, C0 - 1 * SE, 100)
@@ -55,6 +62,7 @@ def monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end
     plt.show()
 
 # Prompt the user for input values
+option_type = input("Enter the option type ('call' or 'put'): ")
 S = float(input("Enter the stock price (S): "))
 K = float(input("Enter the strike price (K): "))
 vol = float(input("Enter the volatility (% as a decimal): "))
@@ -75,4 +83,4 @@ start_date = datetime.date(start_year, start_month, start_day)
 end_date = datetime.date(end_year, end_month, end_day)
 
 # Call the function with the user inputs
-monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date)
+monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date, option_type)
