@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 import datetime
-import matplotlib.pyplot as plt
+import plotly.graph_objs as go
 import scipy.stats as stats
 
 #######################
@@ -20,9 +20,9 @@ st.markdown("""
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 8px;
+    padding: 16px;
     width: auto;
-    margin: 0 auto;
+    margin: 20px auto;
 }
 
 /* Custom classes for CALL and PUT values */
@@ -41,15 +41,15 @@ st.markdown("""
 
 /* Style for the value text */
 .metric-value {
-    font-size: 1.5rem;
+    font-size: 2rem;
     font-weight: bold;
     margin: 0;
 }
 
 /* Style for the label text */
 .metric-label {
-    font-size: 1rem;
-    margin-bottom: 4px;
+    font-size: 1.2rem;
+    margin-bottom: 8px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -103,7 +103,7 @@ with st.sidebar:
     vol = st.number_input("Volatility (σ)", value=0.2)
     r = st.number_input("Risk-Free Interest Rate", value=0.05)
     N = st.number_input("Number of Time Steps (N)", value=252, min_value=1)  # typical for 1 year of trading days
-    M = st.number_input("Number of Simulations (M)", value=1000, min_value=1)
+    M = st.number_input("Number of Simulations (M)", value=10000, min_value=1)
     market_value = st.number_input("Market Value of Option", value=10.0)
 
     start_year = st.number_input("Start Year", value=2024)
@@ -148,31 +148,31 @@ with col2:
 # Display Market Value for comparison
 st.write(f"Market Value of the Option: ${market_value:.2f}")
 
-# Plotting the result distribution
-fig, ax = plt.subplots(figsize=(10, 6))
+# Generate a range of stock prices and volatilities
+S_range = np.linspace(S * 0.8, S * 1.2, 50)
+vol_range = np.linspace(vol * 0.5, vol * 1.5, 50)
 
-# Call Option Plot
-x_call = np.linspace(C0 - 3 * SE_call, C0 + 3 * SE_call, 100)
-y_call = stats.norm.pdf(x_call, C0, SE_call)
-ax.plot(x_call, y_call, label='Call Option', color='#4CAF50', linewidth=2)
-ax.fill_between(x_call, y_call, color='#4CAF50', alpha=0.3)
+# Prepare data for the 3D plot
+C0_surface = np.zeros((len(S_range), len(vol_range)))
 
-# Put Option Plot
-x_put = np.linspace(P0 - 3 * SE_put, P0 + 3 * SE_put, 100)
-y_put = stats.norm.pdf(x_put, P0, SE_put)
-ax.plot(x_put, y_put, label='Put Option', color='#F44336', linewidth=2)
-ax.fill_between(x_put, y_put, color='#F44336', alpha=0.3)
+for i, S_val in enumerate(S_range):
+    for j, vol_val in enumerate(vol_range):
+        C0_temp, _, _, _ = monte_carlo_option_pricing(S_val, K, vol_val, r, N, M, market_value, start_date, end_date)
+        C0_surface[i, j] = C0_temp
 
-# Vertical Lines
-ax.axvline(C0, color='#4CAF50', linestyle='--', label='Call Value')
-ax.axvline(P0, color='#F44336', linestyle='--', label='Put Value')
-ax.axvline(market_value, color='#2196F3', linestyle='-', label='Market Value')
+# Create 3D surface plot
+fig = go.Figure(data=[go.Surface(z=C0_surface, x=S_range, y=vol_range, colorscale='Viridis')])
 
-# Improving the aesthetics
-ax.set_title('Option Pricing Distribution', fontsize=16, fontweight='bold')
-ax.set_xlabel('Option Price', fontsize=14)
-ax.set_ylabel('Probability Density', fontsize=14)
-ax.legend(fontsize=12)
-ax.grid(True, linestyle='--', alpha=0.6)
+fig.update_layout(
+    title='Call Option Price Surface',
+    scene=dict(
+        xaxis_title='Stock Price (S)',
+        yaxis_title='Volatility (σ)',
+        zaxis_title='Call Option Price (C0)'
+    ),
+    autosize=True,
+    margin=dict(l=65, r=50, b=65, t=90)
+)
 
-st.pyplot(fig)
+# Display the 3D plot in Streamlit
+st.plotly_chart(fig)
