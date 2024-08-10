@@ -104,14 +104,14 @@ st.sidebar.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decor
 
 # Using expanders to make the interface less compact
 with st.sidebar.expander("Option Parameters", expanded=True):
-    S = st.slider("Current Asset Price", min_value=90.0, max_value=110.0, value=100.0, step=0.1)
-    K = st.slider("Strike Price", min_value=90.0, max_value=110.0, value=100.0, step=0.1)
-    vol = st.slider("Volatility (σ)", min_value=0.01, max_value=0.5, value=0.2, step=0.01)
-    r = st.slider("Risk-Free Interest Rate", min_value=0.0, max_value=0.1, value=0.03, step=0.01)
+    S = st.number_input("Current Asset Price", value=100.0)
+    K = st.number_input("Strike Price", value=100.0)
+    vol = st.number_input("Volatility (σ)", value=0.2)
+    r = st.number_input("Risk-Free Interest Rate", value=0.03)
 
 with st.sidebar.expander("Simulation Parameters", expanded=False):
-    N = st.slider("Number of Time Steps (N)", min_value=1, max_value=365, value=252, step=1)
-    M = st.slider("Number of Simulations (M)", min_value=100, max_value=1000, value=100, step=100)
+    N = st.number_input("Number of Time Steps (N)", value=252, step=1)
+    M = st.number_input("Number of Simulations (M)", value=500, step=100)
     market_value = st.number_input("Market Value of Option", value=10.0)
 
 with st.sidebar.expander("Dates", expanded=False):
@@ -186,4 +186,4 @@ fig.update_layout(title='Option Pricing Distribution',xaxis_title='Option Price'
 fig.update_annotations(dict(font_size=12, arrowcolor="rgba(0,0,0,0)"))
 
 st.plotly_chart(fig, use_container_width=True)
-                 
+
