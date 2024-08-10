@@ -2,12 +2,11 @@ import streamlit as st
 import numpy as np
 import datetime
 import plotly.graph_objs as go
-import scipy.stats as stats
 
 #######################
 # Page configuration
 st.set_page_config(
-    page_title="Interactive Monte Carlo Option Pricing with Greeks",
+    page_title="Interactive Monte Carlo Option Pricing with Profitability",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded")
@@ -54,8 +53,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Monte Carlo Simulation Function with Greeks Calculation
-def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, start_date, end_date):
+# Monte Carlo Simulation Function for Profitability
+def monte_carlo_profitability(S, K, vol, r, N, M, market_value, start_date, end_date):
     # Calculate the time to maturity in years
     T = (end_date - start_date).days / 365.0
     st.write(f"Time to maturity (T) is: {T:.4f} years")
@@ -74,51 +73,16 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
 
     # Simulated paths for ST
     ST = np.exp(lnSt)
-    
-    # Compute Expectation and SE for Call Option
-    CT = np.maximum(0, ST[-1] - K)
-    C0 = np.exp(-r * T) * np.sum(CT) / M
 
-    # Compute Expectation and SE for Put Option
-    PT = np.maximum(0, K - ST[-1])
-    P0 = np.exp(-r * T) * np.sum(PT) / M
+    # Calculate Payoffs at Maturity
+    call_payoff = np.maximum(0, ST[-1] - K)
+    put_payoff = np.maximum(0, K - ST[-1])
 
-    # Calculate Standard Errors
-    sigma_call = np.sqrt(np.sum((CT - C0)**2) / (M - 1))
-    SE_call = sigma_call / np.sqrt(M)
+    # Calculate Breakeven Points
+    call_breakeven = K + market_value
+    put_breakeven = K - market_value
 
-    sigma_put = np.sqrt(np.sum((PT - P0)**2) / (M - 1))
-    SE_put = sigma_put / np.sqrt(M)
-
-    # Calculate ITM and OTM counts
-    itm_calls = np.sum(ST[-1] > K)
-    otm_calls = np.sum(ST[-1] <= K)
-    itm_puts = np.sum(ST[-1] < K)
-    otm_puts = np.sum(ST[-1] >= K)
-
-    # Calculate ITM and OTM as percentages
-    itm_calls_pct = itm_calls / M * 100
-    otm_calls_pct = otm_calls / M * 100
-    itm_puts_pct = itm_puts / M * 100
-    otm_puts_pct = otm_puts / M * 100
-
-    # Simplified Breakeven or profitability points
-    call_profitability_point = K + C0
-    put_profitability_point = K - P0
-
-    # Define a small epsilon for Greeks calculation
-    epsilon = S * 0.01
-
-    # Greeks Calculation
-    delta_call = np.mean(ST[-1] > K)
-    delta_put = np.mean(ST[-1] < K)
-    
-    gamma_call = (np.mean(ST[-1] > K + epsilon) - np.mean(ST[-1] > K - epsilon)) / (2 * epsilon)
-    gamma_put = gamma_call  # Gamma is the same for calls and puts
-
-    return (C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, 
-            delta_call, delta_put, gamma_call, gamma_put, call_profitability_point, 
-            put_profitability_point)
+    return ST[-1], call_payoff, put_payoff, call_breakeven, put_breakeven
 
 # Sidebar for User Inputs
 st.sidebar.title("📊 Monte Carlo Model")
@@ -135,7 +99,7 @@ with st.sidebar.expander("Option Parameters", expanded=True):
 
 with st.sidebar.expander("Simulation Parameters", expanded=False):
     N = st.number_input("Number of Time Steps (N)", value=252, step=1)
-    M = st.number_input("Number of Simulations (M)", value=1000, step=100)
+    M = st.number_input("Number of Simulations (M)", value=100, step=1)
     market_value = st.number_input("Market Value of Option", value=7.50)
 
 with st.sidebar.expander("Dates", expanded=False):
@@ -143,87 +107,27 @@ with st.sidebar.expander("Dates", expanded=False):
     end_date = st.date_input("End Date", datetime.date(2025, 1, 1))
 
 # Main Page for Output Display
-st.title("Monte Carlo Pricing Model with Greeks")
+st.title("Monte Carlo Pricing Model with Profitability Graphing")
 
-# Calculate Call and Put values using Monte Carlo simulation
-results = monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, start_date, end_date)
-(C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, 
- delta_call, delta_put, gamma_call, gamma_put, call_profitability_point, 
- put_profitability_point) = results
+# Calculate the paths and payoffs
+ST, call_payoff, put_payoff, call_breakeven, put_breakeven = monte_carlo_profitability(S, K, vol, r, N, M, market_value, start_date, end_date)
 
-# Display Call and Put Values with Standard Errors in colored tables
-col1, col2 = st.columns(2)
-
-with col1:
-    st.markdown(f"""
-        <div class="metric-container metric-call">
-            <div>
-                <div class="metric-label">CALL Value</div>
-                <div class="metric-value">${C0:.2f} ± {SE_call:.2f}</div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-with col2:
-    st.markdown(f"""
-        <div class="metric-container metric-put">
-            <div>
-                <div class="metric-label">PUT Value</div>
-                <div class="metric-value">${P0:.2f} ± {SE_put:.2f}</div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-# ITM and OTM details in an expander
-with st.expander("In the Money (ITM) and Out of the Money (OTM) Percentages", expanded=False):
-    st.write(f"**Call Options:** ITM: {itm_calls_pct:.2f}%, OTM: {otm_calls_pct:.2f}%")
-    st.write(f"**Put Options:** ITM: {itm_puts_pct:.2f}%, OTM: {otm_puts_pct:.2f}%")
-
-# Profitability Points
-with st.expander("Profitability Points", expanded=False):
-    st.write(f"**Call Option Profitability Point:** ${call_profitability_point:.2f}")
-    st.write(f"**Put Option Profitability Point:** ${put_profitability_point:.2f}")
-
-# Display Market Value for comparison
-st.write(f"Market Value of the Option: ${market_value:.2f}")
-
-# Display Greeks
-st.subheader("Option Greeks")
-col1, col2 = st.columns(2)
-with col1:
-    st.write(f"**Delta (Call):** {delta_call:.4f}")
-    st.write(f"**Gamma (Call):** {gamma_call:.4f}")
-with col2:
-    st.write(f"**Delta (Put):** {delta_put:.4f}")
-    st.write(f"**Gamma (Put):** {gamma_put:.4f}")
-
-# Interactive Plot with Plotly
-x_call = np.linspace(C0 - 3 * SE_call, C0 + 3 * SE_call, 100)
-y_call = stats.norm.pdf(x_call, C0, SE_call)
-
-x_put = np.linspace(P0 - 3 * SE_put, P0 + 3 * SE_put, 100)
-y_put = stats.norm.pdf(x_put, P0, SE_put)
-
+# Plot the Payoffs
 fig = go.Figure()
 
-# Call Option Plot
-fig.add_trace(go.Scatter(x=x_call, y=y_call, mode='lines', name='Call Option', line=dict(color='#4CAF50', width=2)))
+# Plot Call Payoff
+fig.add_trace(go.Scatter(x=ST, y=call_payoff, mode='markers', name='Call Payoff', marker=dict(color='#4CAF50')))
+# Plot Put Payoff
+fig.add_trace(go.Scatter(x=ST, y=put_payoff, mode='markers', name='Put Payoff', marker=dict(color='#F44336')))
 
-# Put Option Plot
-fig.add_trace(go.Scatter(x=x_put, y=y_put, mode='lines', name='Put Option', line=dict(color='#F44336', width=2)))
-
-# Vertical Lines
-fig.add_vline(x=C0, line=dict(color='#4CAF50', dash='dash'), annotation_text='Call Value', annotation_position='top right')
-fig.add_vline(x=P0, line=dict(color='#F44336', dash='dash'), annotation_text='Put Value', annotation_position='top left')
-fig.add_vline(x=market_value, line=dict(color='#2196F3'), annotation_text='Market Value', annotation_position='top right')
-
-# Profitability Points
-fig.add_vline(x=call_profitability_point, line=dict(color='#4CAF50', dash='dot'), annotation_text='Call Profitability Point', annotation_position='bottom right')
-fig.add_vline(x=put_profitability_point, line=dict(color='#F44336', dash='dot'), annotation_text='Put Profitability Point', annotation_position='bottom left')
+# Add Breakeven Points
+fig.add_vline(x=call_breakeven, line=dict(color='#4CAF50', dash='dot'), annotation_text='Call Breakeven', annotation_position='bottom right')
+fig.add_vline(x=put_breakeven, line=dict(color='#F44336', dash='dot'), annotation_text='Put Breakeven', annotation_position='bottom left')
 
 # Improving the aesthetics
-fig.update_layout(title='Option Pricing Distribution',xaxis_title='Option Price',
-                  yaxis_title='Probability Density',
+fig.update_layout(title='Option Payoff vs. Asset Price at Maturity',
+                  xaxis_title='Underlying Asset Price at Maturity',
+                  yaxis_title='Option Payoff',
                   legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, traceorder="normal"),
                   template='plotly_white',
                   margin=dict(l=50, r=50, t=50, b=50))
@@ -232,3 +136,7 @@ fig.update_layout(title='Option Pricing Distribution',xaxis_title='Option Price'
 fig.update_annotations(dict(font_size=12, arrowcolor="rgba(0,0,0,0)"))
 
 st.plotly_chart(fig, use_container_width=True)
+
+# Display Market Value for comparison
+st.write(f"Market Value of the Option: ${market_value:.2f}")
+
