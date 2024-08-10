@@ -113,7 +113,7 @@ with st.sidebar.expander("Dates", expanded=False):
     end_date = st.date_input("End Date", datetime.date(2025, 1, 1))
 
 # Main Page for Output Display
-st.title("Monte Carlo Pricing Model")
+st.title("Monte Carlo European Pricing Model")
 
 # Calculate Call and Put values using Monte Carlo simulation
 C0, SE_call, P0, SE_put = monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date)
@@ -155,11 +155,9 @@ fig = go.Figure()
 
 # Call Option Plot
 fig.add_trace(go.Scatter(x=x_call, y=y_call, mode='lines', name='Call Option', line=dict(color='#4CAF50', width=2)))
-fig.add_trace(go.Scatter(x=x_call, y=y_call, fill='tozeroy', fillcolor='rgba(76, 175, 80, 0.3)', mode='none'))
 
 # Put Option Plot
 fig.add_trace(go.Scatter(x=x_put, y=y_put, mode='lines', name='Put Option', line=dict(color='#F44336', width=2)))
-fig.add_trace(go.Scatter(x=x_put, y=y_put, fill='tozeroy', fillcolor='rgba(244, 67, 54, 0.3)', mode='none'))
 
 # Vertical Lines
 fig.add_vline(x=C0, line=dict(color='#4CAF50', dash='dash'), annotation_text='Call Value', annotation_position='top right')
