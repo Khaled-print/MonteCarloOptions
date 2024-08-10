@@ -68,10 +68,11 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     lnS = np.log(S)
 
     # Monte Carlo Method
-    Z = np.random.normal size=(N, M))
+    Z = np.random.normal(size=(N, M))
     delta_lnSt = nudt + volsdt * Z
     lnSt = lnS + np.cumsum(delta_lnSt, axis=0)
     lnSt = np.concatenate((np.full(shape=(1, M), fill_value=lnS), lnSt))
+
 
     # Simulated paths for ST
     ST = np.exp(lnSt)
