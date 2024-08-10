@@ -173,7 +173,7 @@ fig.add_trace(go.Scatter(x=x_put, y=y_put, mode='lines', name='Put Option', line
 # Vertical Lines
 fig.add_vline(x=C0, line=dict(color='#4CAF50', dash='dash'), annotation_text='Call Value', annotation_position='top right')
 fig.add_vline(x=P0, line=dict(color='#F44336', dash='dash'), annotation_text='Put Value', annotation_position='top left')
-fig.add_vline(x=market_value, line=dict(color='#2196F3'), annotation_text='Market Value', annotation_position='top right')
+fig.add_vline(x=market_value, line=dict(color='#2196F3'), annotation_text='Market Value', annotation_position='bottom right')
 
 # Improving the aesthetics
 fig.update_layout(title='Option Pricing Distribution',xaxis_title='Option Price',
