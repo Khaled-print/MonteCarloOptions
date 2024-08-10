@@ -1,9 +1,8 @@
 import streamlit as st
 import numpy as np
 import datetime
-import matplotlib.pyplot as plt
-import scipy.stats as stats
 import plotly.graph_objs as go
+import scipy.stats as stats
 
 #######################
 # Page configuration
@@ -99,10 +98,10 @@ st.sidebar.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decor
 
 # Using expanders to make the interface less compact
 with st.sidebar.expander("Option Parameters", expanded=True):
-    S = st.slider("Current Asset Price", min_value=50.0, max_value=200.0, value=150.0, step=1.0)
-    K = st.slider("Strike Price", min_value=50.0, max_value=200.0, value=155.0, step=1.0)
-    vol = st.slider("Volatility (σ)", min_value=0.01, max_value=1.0, value=0.2, step=0.01)
-    r = st.slider("Risk-Free Interest Rate", min_value=0.0, max_value=0.2, value=0.05, step=0.01)
+    S = st.slider("Current Asset Price", min_value=90.0, max_value=110.0, value=100.0, step=0.1)
+    K = st.slider("Strike Price", min_value=90.0, max_value=110.0, value=100.0, step=0.1)
+    vol = st.slider("Volatility (σ)", min_value=0.01, max_value=0.5, value=0.2, step=0.01)
+    r = st.slider("Risk-Free Interest Rate", min_value=0.0, max_value=0.1, value=0.03, step=0.01)
 
 with st.sidebar.expander("Simulation Parameters", expanded=False):
     N = st.slider("Number of Time Steps (N)", min_value=1, max_value=365, value=252, step=1)
@@ -172,6 +171,7 @@ fig.update_layout(title='Option Pricing Distribution',
                   xaxis_title='Option Price',
                   yaxis_title='Probability Density',
                   legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
-                  template='plotly_white')
+                  template='plotly_white',
+                  margin=dict(l=50, r=50, t=50, b=50))
 
 st.plotly_chart(fig, use_container_width=True)
