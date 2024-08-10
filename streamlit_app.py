@@ -73,7 +73,6 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     lnSt = lnS + np.cumsum(delta_lnSt, axis=0)
     lnSt = np.concatenate((np.full(shape=(1, M), fill_value=lnS), lnSt))
 
-
     # Simulated paths for ST
     ST = np.exp(lnSt)
     
@@ -96,9 +95,9 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     profit_call = CT - market_value
     profit_put = PT - market_value
 
-    # Calculate the average break-even price where profit becomes positive
-    break_even_call = np.mean(ST[-1][profit_call > 0])
-    break_even_put = np.mean(ST[-1][profit_put > 0])
+    # Calculate the average break-even point where profit becomes positive
+    breakeven_call = np.mean(ST[-1][profit_call > 0])
+    breakeven_put = np.mean(ST[-1][profit_put > 0])
 
     # Calculate ITM and OTM counts
     itm_calls = np.sum(ST[-1] > K)
@@ -167,7 +166,7 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     P0_up = np.exp(-r_up * T) * np.sum(PT_up) / M
     rho_put = (P0_up - P0) / epsilon
 
-    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, profit_call, profit_put, break_even_call, break_even_put
+    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, profit_call, profit_put, breakeven_call, breakeven_put
 
 # Sidebar for User Inputs
 st.sidebar.title("📊 Monte Carlo Model")
@@ -201,7 +200,7 @@ st.title("Monte Carlo Pricing Model with Greeks")
 results = monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, start_date, end_date)
 (C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, 
  delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, 
- profit_call, profit_put, break_even_call, break_even_put) = results
+ profit_call, profit_put, breakeven_call, breakeven_put) = results
 
 # Display Call and Put Values with Standard Errors in colored tables
 col1, col2 = st.columns(2)
@@ -216,7 +215,7 @@ with col1:
         </div>
     """, unsafe_allow_html=True)
 
-    st.write(f"**Break-Even Price (Call):** ${break_even_call:.2f}")
+    st.write(f"**Break-Even Point (Call):** ${breakeven_call:.2f}")
 
 with col2:
     st.markdown(f"""
@@ -228,7 +227,7 @@ with col2:
         </div>
     """, unsafe_allow_html=True)
 
-    st.write(f"**Break-Even Price (Put):** ${break_even_put:.2f}")
+    st.write(f"**Break-Even Point (Put):** ${breakeven_put:.2f}")
 
 # ITM and OTM details in an expander
 with st.expander("In the Money (ITM) and Out of the Money (OTM) Percentages", expanded=False):
@@ -257,18 +256,18 @@ with col2:
 # Display the selected plot type
 if plot_type == "Option Pricing Distribution":
     x_call = np.linspace(C0 - 3 * SE_call, C0 + 3 * SE_call, 100)
-    y_call = stats.norm.cdf(x_call, C0, SE_call)
+    y_call = stats.norm.pdf(x_call, C0, SE_call)
 
     x_put = np.linspace(P0 - 3 * SE_put, P0 + 3 * SE_put, 100)
-    y_put = stats.norm.cdf(x_put, P0, SE_put)
+    y_put = stats.norm.pdf(x_put, P0, SE_put)
 
     fig = go.Figure()
 
-    # Call Option CDF Plot
-    fig.add_trace(go.Scatter(x=x_call, y=y_call, mode='lines', name='Call Option CDF', line=dict(color='#4CAF50', width=2)))
+    # Call Option Plot
+    fig.add_trace(go.Scatter(x=x_call, y=y_call, mode='lines', name='Call Option', line=dict(color='#4CAF50', width=2)))
 
-    # Put Option CDF Plot
-    fig.add_trace(go.Scatter(x=x_put, y=y_put, mode='lines', name='Put Option CDF', line=dict(color='#F44336', width=2)))
+    # Put Option Plot
+    fig.add_trace(go.Scatter(x=x_put, y=y_put, mode='lines', name='Put Option', line=dict(color='#F44336', width=2)))
 
     # Vertical Lines
     fig.add_vline(x=C0, line=dict(color='#4CAF50', dash='dash'), annotation_text='Call Value', annotation_position='top right')
@@ -276,8 +275,8 @@ if plot_type == "Option Pricing Distribution":
     fig.add_vline(x=market_value, line=dict(color='#2196F3'), annotation_text='Market Value', annotation_position='top right')
 
     # Improving the aesthetics
-    fig.update_layout(title='Option Pricing Distribution (CDF)',xaxis_title='Option Price',
-                      yaxis_title='Cumulative Probability',
+    fig.update_layout(title='Option Pricing Distribution',xaxis_title='Option Price',
+                      yaxis_title='Probability Density',
                       legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, traceorder="normal"),
                       template='plotly_white',
                       margin=dict(l=50, r=50, t=50, b=50))
@@ -291,18 +290,16 @@ elif plot_type == "Profitability Analysis":
     fig = go.Figure()
 
     # Profitability Plot for Call Option
-    fig.add_trace(go.Histogram(x=profit_call, name="Call Option Profitability", marker_color='#4CAF50'))
+    cumulative_profit_call = np.cumsum(np.sort(profit_call))
+    fig.add_trace(go.Scatter(x=np.sort(profit_call), y=cumulative_profit_call, mode='lines', name="Call Option Profitability", line=dict(color='#4CAF50', width=2)))
 
     # Profitability Plot for Put Option
-    fig.add_trace(go.Histogram(x=profit_put, name="Put Option Profitability", marker_color='#F44336'))
+    cumulative_profit_put = np.cumsum(np.sort(profit_put))
+    fig.add_trace(go.Scatter(x=np.sort(profit_put), y=cumulative_profit_put, mode='lines', name="Put Option Profitability", line=dict(color='#F44336', width=2)))
 
-    fig.update_layout(title='Profitability Analysis', xaxis_title='Profit/Loss', yaxis_title='Frequency',
+    fig.update_layout(title='Profitability Analysis', xaxis_title='Profit/Loss', yaxis_title='Cumulative Profit',
                       legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, traceorder="normal"),
                       template='plotly_white',
-                      margin=dict(l=50, r=50, t=50, b=50),
-                      barmode='overlay')
-
-    fig.update_traces(opacity=0.75)
+                      margin=dict(l=50, r=50, t=50, b=50))
 
     st.plotly_chart(fig, use_container_width=True)
-
