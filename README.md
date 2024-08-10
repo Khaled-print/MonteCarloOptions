@@ -95,9 +95,11 @@ The model includes a visualization feature that plots the probability distributi
 
 ## Conclusion
 
-This Monte Carlo Option Pricing Model is a powerful tool for evaluating European options in scenarios where traditional models like Black-Scholes might fall short. Its flexibility and the ability to track ITM and OTM outcomes provide a comprehensive view of potential market conditions. This is my first project ever, I by no means have any clue what I'm really doing, I just have an intrest for quantitative finance, particularly algo trading.
+This Monte Carlo Option Pricing Model is a tool for evaluating European options in scenarios where traditional models like Black-Scholes might fall short. Its flexibility and the ability to track ITM and OTM outcomes provide a comprehensive view of potential market conditions. This is my first project ever, I by no means have any clue what I'm really doing, I just have an intrest for quantitative finance, particularly algo trading.
 
 ### Inspiration
 
-The calculation methodology was inspired by QuantPy’s YouTube video on **Monte Carlo Simulation for Option Pricing with Python**. I thought it would be cool to create an interactive version that lets you play with variables interactively and also included a put option version to give a more complete tool for option pricing. I have tweaked the intial calculation methodology to enable calculations for both a 'call' and 'put', the code unlike the orginal will prompt the user for input variables, run said variables through GBM & Payoff calculations, and produce values and plotted Monte Carlo distribution (however it is easier and more informative to just use the streamlit). 
+The calculation methodology was inspired by QuantPy’s YouTube video on **Monte Carlo Simulation for Option Pricing with Python**. I thought it would be cool to create an interactive version that lets you play with variables interactively and also included a put option version to give a more complete tool for option pricing. 
+
+I have tweaked the intial calculation methodology to enable calculations for both a 'call' and 'put', the code unlike the orginal will prompt the user for input variables, run said variables through GBM & Payoff calculations, and produce values and plotted Monte Carlo distribution (however it is easier and more informative to just use the streamlit). 
 
