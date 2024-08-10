@@ -103,7 +103,7 @@ with st.sidebar:
     vol = st.number_input("Volatility (σ)", value=0.2)
     r = st.number_input("Risk-Free Interest Rate", value=0.05)
     N = st.number_input("Number of Time Steps (N)", value=252, min_value=1)  # typical for 1 year of trading days
-    M = st.number_input("Number of Simulations (M)", value=10000, min_value=1)
+    M = st.number_input("Number of Simulations (M)", value=1000, min_value=1)
     market_value = st.number_input("Market Value of Option", value=10.0)
 
     start_year = st.number_input("Start Year", value=2024)
