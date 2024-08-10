@@ -15,7 +15,7 @@ st.set_page_config(
 # Custom CSS to inject into Streamlit
 st.markdown("""
 <style>
-/* Adjust the size and alignment of the CALL value container */
+/* Adjust the size and alignment of the CALL and PUT value containers */
 .metric-container {
     display: flex;
     justify-content: center;
@@ -25,9 +25,16 @@ st.markdown("""
     margin: 0 auto;
 }
 
-/* Custom class for the value */
+/* Custom classes for CALL and PUT values */
 .metric-call {
     background-color: #90ee90;
+    color: black;
+    border-radius: 10px;
+    margin-right: 10px;
+}
+
+.metric-put {
+    background-color: #ffcccb;
     color: black;
     border-radius: 10px;
 }
@@ -65,15 +72,23 @@ def monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end
     lnSt = lnS + np.cumsum(delta_lnSt, axis=0)
     lnSt = np.concatenate((np.full(shape=(1, M), fill_value=lnS), lnSt))
 
-    # Compute Expectation and SE
+    # Compute Expectation and SE for Call Option
     ST = np.exp(lnSt)
     CT = np.maximum(0, ST[-1] - K)
     C0 = np.exp(-r * T) * np.sum(CT) / M
 
-    sigma = np.sqrt(np.sum((CT - C0)**2) / (M - 1))
-    SE = sigma / np.sqrt(M)
+    # Compute Expectation and SE for Put Option
+    PT = np.maximum(0, K - ST[-1])
+    P0 = np.exp(-r * T) * np.sum(PT) / M
 
-    return C0, SE
+    # Calculate Standard Errors
+    sigma_call = np.sqrt(np.sum((CT - C0)**2) / (M - 1))
+    SE_call = sigma_call / np.sqrt(M)
+
+    sigma_put = np.sqrt(np.sum((PT - P0)**2) / (M - 1))
+    SE_put = sigma_put / np.sqrt(M)
+
+    return C0, SE_call, P0, SE_put
 
 # Sidebar for User Inputs
 with st.sidebar:
@@ -103,39 +118,59 @@ with st.sidebar:
 # Main Page for Output Display
 st.title("Monte Carlo Pricing Model")
 
-# Calculate Call values using Monte Carlo simulation
-C0, SE = monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date)
+# Calculate Call and Put values using Monte Carlo simulation
+C0, SE_call, P0, SE_put = monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date)
 
-# Display Call Value with Standard Error in colored table
-st.markdown(f"""
-    <div class="metric-container metric-call">
-        <div>
-            <div class="metric-label">CALL Value</div>
-            <div class="metric-value">${C0:.2f} ± {SE:.2f}</div>
+# Display Call and Put Values with Standard Errors in colored tables
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown(f"""
+        <div class="metric-container metric-call">
+            <div>
+                <div class="metric-label">CALL Value</div>
+                <div class="metric-value">${C0:.2f} ± {SE_call:.2f}</div>
+            </div>
         </div>
-    </div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown(f"""
+        <div class="metric-container metric-put">
+            <div>
+                <div class="metric-label">PUT Value</div>
+                <div class="metric-value">${P0:.2f} ± {SE_put:.2f}</div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
 # Display Market Value for comparison
 st.write(f"Market Value of the Option: ${market_value:.2f}")
 
 # Plotting the result distribution
-x1 = np.linspace(C0 - 3 * SE, C0 - 1 * SE, 100)
-x2 = np.linspace(C0 - 1 * SE, C0 + 1 * SE, 100)
-x3 = np.linspace(C0 + 1 * SE, C0 + 3 * SE, 100)
+x_call = np.linspace(C0 - 3 * SE_call, C0 + 3 * SE_call, 100)
+y_call = stats.norm.pdf(x_call, C0, SE_call)
 
-s1 = stats.norm.pdf(x1, C0, SE)
-s2 = stats.norm.pdf(x2, C0, SE)
-s3 = stats.norm.pdf(x3, C0, SE)
+x_put = np.linspace(P0 - 3 * SE_put, P0 + 3 * SE_put, 100)
+y_put = stats.norm.pdf(x_put, P0, SE_put)
 
-plt.fill_between(x1, s1, color='tab:blue', label='> StDev')
-plt.fill_between(x2, s2, color='cornflowerblue', label='1 StDev')
-plt.fill_between(x3, s3, color='tab:blue')
+plt.figure(figsize=(12, 6))
 
-plt.plot([C0, C0], [0, max(s2) * 1.1], 'k', label='Theoretical Value')
-plt.plot([market_value, market_value], [0, max(s2) * 1.1], 'r', label='Market Value')
+plt.plot(x_call, y_call, label='Call Option', color='blue')
+plt.fill_between(x_call, y_call, color='blue', alpha=0.3)
 
-plt.ylabel("Probability")
-plt.xlabel("Option Price")
+plt.plot(x_put, y_put, label='Put Option', color='red')
+plt.fill_between(x_put, y_put, color='red', alpha=0.3)
+
+plt.axvline(C0, color='blue', linestyle='--', label='Call Value')
+plt.axvline(P0, color='red', linestyle='--', label='Put Value')
+
+plt.axvline(market_value, color='green', linestyle='-', label='Market Value')
+
+plt.title('Option Pricing Distribution')
+plt.xlabel('Option Price')
+plt.ylabel('Probability Density')
 plt.legend()
+plt.grid(True, linestyle='--', alpha=0.7)
+
 st.pyplot(plt.gcf())
