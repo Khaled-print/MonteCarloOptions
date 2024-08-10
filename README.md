@@ -16,18 +16,32 @@ This repository contains a Python-based implementation of a **Monte Carlo Simula
 
 The price of the underlying asset \( S(t) \) evolves over time according to the following stochastic process:
 
-\[
-S(t + \Delta t) = S(t) \times \exp\left( \left( r - \frac{\sigma^2}{2} \right) \Delta t + \sigma \sqrt{\Delta t} \times Z \right)
-\]
+S(t + Δt) = S(t) * exp[(r - 0.5 * σ^2) * Δt + σ * sqrt(Δt) * Z]
 
-- **\( S(t) \)**: The asset price at time \( t \).
-- **\( r \)**: The risk-free interest rate.
-- **\( \sigma \)**: The volatility of the asset.
-- **\( Z \)**: A random variable drawn from a standard normal distribution (mean = 0, variance = 1).
+
+- **S(t)**: The asset price at time t.
+- **r**: The risk-free interest rate.
+- **σ**: The volatility of the asset.
+- **Z**: A random variable drawn from a standard normal distribution (mean = 0, variance = 1).
 
 ### Simulating Price Paths
 
 The Monte Carlo simulation generates multiple paths for the asset price, each representing a potential scenario for how the asset might behave over time until maturity. For each path, the payoff of the option is calculated.
+
+### Option Payoff Calculation
+
+At maturity, the payoffs are determined as follows:
+
+- **Call Option**: `max(S(T) - K, 0)`
+- **Put Option**: `max(K - S(T), 0)`
+
+Where:
+- **S(T)**: The simulated asset price at maturity.
+- **K**: The strike price of the option.
+
+### Pricing the Option
+
+The option price is derived from the expected value of the payoff, discounted at the risk-free rate:
 
 ### Option Payoff Calculation
 
@@ -44,19 +58,17 @@ Where:
 
 The option price is derived from the expected value of the payoff, discounted at the risk-free rate:
 
-\[
-\text{Option Price} = e^{-rT} \times \frac{1}{M} \sum_{i=1}^{M} \text{Payoff}_i
-\]
+Option Price = exp(-r * T) * (1/M) * Σ(Payoff_i)
 
 Where:
-- **\( M \)**: The number of simulated paths.
+- **M**: The number of simulated paths.
 
 ### Tracking In the Money (ITM) and Out of the Money (OTM) Outcomes
 
 To provide additional insights, the model tracks how often the options are In the Money (ITM) or Out of the Money (OTM) at maturity:
 
-- **Call Option ITM**: When \( S(T) > K \)
-- **Put Option ITM**: When \( S(T) < K \)
+- **Call Option ITM**: When `S(T) > K`
+- **Put Option ITM**: When `S(T) < K`
 
 These metrics help in evaluating the likelihood of profitable outcomes and can be used for P&L tracking.
 
