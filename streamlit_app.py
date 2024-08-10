@@ -88,6 +88,12 @@ def monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end
     sigma_put = np.sqrt(np.sum((PT - P0)**2) / (M - 1))
     SE_put = sigma_put / np.sqrt(M)
 
+    # Calculate ITM and OTM counts
+    itm_calls = np.sum(ST[-1] > K)
+    otm_calls = np.sum(ST[-1] <= K)
+    itm_puts = np.sum(ST[-1] < K)
+    otm_puts = np.sum(ST[-1] >= K)
+
     # Calculate ITM and OTM as percentages
     itm_calls_pct = itm_calls / M * 100
     otm_calls_pct = otm_calls / M * 100
