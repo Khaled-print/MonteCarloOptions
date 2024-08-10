@@ -157,13 +157,20 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     P0_up = np.exp(-r_up * T) * np.sum(PT_up) / M
     rho_put = (P0_up - P0) / epsilon
 
-    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put
+    # Calculate break-even points
+    break_even_call = K + C0
+    break_even_put = K - P0
+
+    return (C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, 
+            itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, 
+            gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, 
+            rho_put, break_even_call, break_even_put)
 
 # Sidebar for User Inputs
 st.sidebar.title("📊 Monte Carlo Model")
-st.sidebar.write("Created by:")
+st.sidebar.write("`Created by:`")
 linkedin_url = "www.linkedin.com/in/khaled-sahbi-161329200"
-st.sidebar.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decoration: none; color: inherit;"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="25" height="25" style="vertical-align: middle; margin-right: 10px;">Khaled Sahbi</a>', unsafe_allow_html=True)
+st.sidebar.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decoration: none; color: inherit;"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="25" height="25" style="vertical-align: middle; margin-right: 10px;">`Khaled Sahbi`</a>', unsafe_allow_html=True)
 
 # Using expanders to make the interface less compact
 with st.sidebar.expander("Option Parameters", expanded=True):
@@ -186,8 +193,10 @@ st.title("Monte Carlo Pricing Model with Greeks")
 
 # Calculate Call and Put values using Monte Carlo simulation
 results = monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, start_date, end_date)
-(C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, 
- delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put) = results
+(C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, 
+ otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, 
+ vega_put, theta_call, theta_put, rho_call, rho_put, break_even_call, 
+ break_even_put) = results
 
 # Display Call and Put Values with Standard Errors in colored tables
 col1, col2 = st.columns(2)
@@ -251,13 +260,17 @@ fig.add_trace(go.Scatter(x=x_call, y=y_call, mode='lines', name='Call Option', l
 # Put Option Plot
 fig.add_trace(go.Scatter(x=x_put, y=y_put, mode='lines', name='Put Option', line=dict(color='#F44336', width=2)))
 
-# Vertical Lines
+# Vertical Lines for Option Values
 fig.add_vline(x=C0, line=dict(color='#4CAF50', dash='dash'), annotation_text='Call Value', annotation_position='top right')
 fig.add_vline(x=P0, line=dict(color='#F44336', dash='dash'), annotation_text='Put Value', annotation_position='top left')
 fig.add_vline(x=market_value, line=dict(color='#2196F3'), annotation_text='Market Value', annotation_position='top right')
 
+# Vertical Lines for Break-Even Points
+fig.add_vline(x=break_even_call, line=dict(color='#FFC107', dash='dash'), annotation_text='Break-Even Call', annotation_position='bottom right')
+fig.add_vline(x=break_even_put, line=dict(color='#FF5722', dash='dash'), annotation_text='Break-Even Put', annotation_position='bottom left')
+
 # Improving the aesthetics
-fig.update_layout(title='Option Pricing Distribution',xaxis_title='Option Price',
+fig.update_layout(title='Option Pricing Distribution', xaxis_title='Option Price',
                   yaxis_title='Probability Density',
                   legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, traceorder="normal"),
                   template='plotly_white',
@@ -267,3 +280,4 @@ fig.update_layout(title='Option Pricing Distribution',xaxis_title='Option Price'
 fig.update_annotations(dict(font_size=12, arrowcolor="rgba(0,0,0,0)"))
 
 st.plotly_chart(fig, use_container_width=True)
+
