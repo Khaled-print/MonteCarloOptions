@@ -93,10 +93,14 @@ The model includes a visualization feature that plots the probability distributi
 
 ## Conclusion
 
-This Monte Carlo Option Pricing Model is a tool for evaluating European options in scenarios where traditional models like Black-Scholes might fall short. Its flexibility, the ability to track ITM and OTM outcomes, the inclusion of option Greeks, and the new Break-Even Analysis provide a comprehensive view of potential market conditions. This is my first project ever, and I have a strong interest in quantitative finance, particularly algorithmic trading.
+This Monte Carlo Option Pricing Model is a tool for evaluating European options in scenarios where traditional models like Black-Scholes might fall short. Its flexibility, the ability to track ITM and OTM outcomes, the inclusion of option Greeks, and the Break-Even Analysis provide a comprehensive view of potential market conditions. This is my first project ever, and I have a strong interest in quantitative finance, particularly algorithmic trading.
 
 ### Inspiration
 
 The calculation methodology for the Monte Carlo was inspired by QuantPy’s YouTube video on Monte Carlo Simulation for Stock Portfolio. I thought it would be cool to create an interactive options version that lets you play with variables interactively and also included Greeks, and Break-Even Analysis to give a more complete tool for option pricing.
 
 I have tweaked the initial calculation methodology to enable calculations for both 'call' and 'put' options. The code, unlike the original, will prompt the user for input variables, run said variables through GBM & Payoff calculations, and produce values and a plotted Monte Carlo distribution. Additionally, the inclusion of option Greeks and Break-Even Analysis makes the tool more robust and informative for practical use, particularly in risk management and trading strategies.
+
+### Changes/Improvements Planned 
+- **Improve model method or include others**: Add more variables, or options for different modelling methods such as the Black-Scholes Model.
+- **Create a SQL database for PNL projection**: Save inputs and outputs per simulation, map inputs to outputs into tables and create a calculation for PNL of said simulations.   
