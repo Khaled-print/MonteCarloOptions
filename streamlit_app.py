@@ -7,7 +7,7 @@ import scipy.stats as stats
 #######################
 # Page configuration
 st.set_page_config(
-    page_title="Interactive Monte Carlo Option Pricing",
+    page_title="Interactive Monte Carlo Option Pricing with Greeks",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded")
@@ -54,8 +54,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Monte Carlo Simulation Function
-def monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date):
+# Monte Carlo Simulation Function with Greeks Calculation
+def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, start_date, end_date):
     # Calculate the time to maturity in years
     T = (end_date - start_date).days / 365.0
     st.write(f"Time to maturity (T) is: {T:.4f} years")
@@ -72,8 +72,10 @@ def monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end
     lnSt = lnS + np.cumsum(delta_lnSt, axis=0)
     lnSt = np.concatenate((np.full(shape=(1, M), fill_value=lnS), lnSt))
 
-    # Compute Expectation and SE for Call Option
+    # Simulated paths for ST
     ST = np.exp(lnSt)
+    
+    # Compute Expectation and SE for Call Option
     CT = np.maximum(0, ST[-1] - K)
     C0 = np.exp(-r * T) * np.sum(CT) / M
 
@@ -100,7 +102,62 @@ def monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end
     itm_puts_pct = itm_puts / M * 100
     otm_puts_pct = otm_puts / M * 100
 
-    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct
+    # Greeks Calculation
+    delta_call = np.mean(ST[-1] > K)  # ∆ Call (approximated by the proportion of paths that end up ITM)
+    delta_put = np.mean(ST[-1] < K)   # ∆ Put (approximated by the proportion of paths that end up ITM)
+    
+    # Gamma can be approximated as the change in Delta for a small change in S
+    epsilon = S * 0.01
+    ST_up = ST * np.exp(volsdt)
+    ST_down = ST * np.exp(-volsdt)
+    
+    delta_call_up = np.mean(ST_up[-1] > K)
+    delta_call_down = np.mean(ST_down[-1] > K)
+    
+    gamma_call = (delta_call_up - delta_call_down) / (2 * epsilon)
+    gamma_put = gamma_call  # Gamma is the same for calls and puts
+
+    # Vega is approximated by rerunning the simulation with slightly higher volatility
+    volsdt_up = (vol + epsilon) * np.sqrt(dt)
+    lnSt_up = lnS + np.cumsum(nudt + volsdt_up * Z, axis=0)
+    ST_up_vol = np.exp(lnSt_up)
+
+    CT_up_vol = np.maximum(0, ST_up_vol[-1] - K)
+    C0_up_vol = np.exp(-r * T) * np.sum(CT_up_vol) / M
+    vega_call = (C0_up_vol - C0) / epsilon
+
+    PT_up_vol = np.maximum(0, K - ST_up_vol[-1])
+    P0_up_vol = np.exp(-r * T) * np.sum(PT_up_vol) / M
+    vega_put = (P0_up_vol - P0) / epsilon
+
+    # Theta is approximated by rerunning the simulation with a slightly shorter maturity
+    T_down = T - dt
+    lnSt_down = lnS + np.cumsum(nudt * (T_down/T) + volsdt * np.sqrt(T_down/T) * Z, axis=0)
+    ST_down = np.exp(lnSt_down)
+
+    CT_down = np.maximum(0, ST_down[-1] - K)
+    C0_down = np.exp(-r * T_down) * np.sum(CT_down) / M
+    theta_call = (C0_down - C0) / dt
+
+    PT_down = np.maximum(0, K - ST_down[-1])
+    P0_down = np.exp(-r * T_down) * np.sum(PT_down) / M
+    theta_put = (P0_down - P0) / dt
+
+    # Rho is approximated by rerunning the simulation with a slightly higher interest rate
+    r_up = r + epsilon
+    nudt_up = (r_up - 0.5 * vol**2) * dt
+    lnSt_up = lnS + np.cumsum(nudt_up + volsdt * Z, axis=0)
+    ST_up = np.exp(lnSt_up)
+
+    CT_up = np.maximum(0, ST_up[-1] - K)
+    C0_up = np.exp(-r_up * T) * np.sum(CT_up) / M
+    rho_call = (C0_up - C0) / epsilon
+
+    PT_up = np.maximum(0, K - ST_up[-1])
+    P0_up = np.exp(-r_up * T) * np.sum(PT_up) / M
+    rho_put = (P0_up - P0) / epsilon
+
+    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put
 
 # Sidebar for User Inputs
 st.sidebar.title("📊 Monte Carlo Model")
@@ -125,10 +182,12 @@ with st.sidebar.expander("Dates", expanded=False):
     end_date = st.date_input("End Date", datetime.date(2025, 1, 1))
 
 # Main Page for Output Display
-st.title("Monte Carlo Pricing Model")
+st.title("Monte Carlo Pricing Model with Greeks")
 
 # Calculate Call and Put values using Monte Carlo simulation
-C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct = monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date)
+results = monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, start_date, end_date)
+(C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, 
+ delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put) = results
 
 # Display Call and Put Values with Standard Errors in colored tables
 col1, col2 = st.columns(2)
@@ -160,6 +219,22 @@ with st.expander("In the Money (ITM) and Out of the Money (OTM) Percentages", ex
 
 # Display Market Value for comparison
 st.write(f"Market Value of the Option: ${market_value:.2f}")
+
+# Display Greeks
+st.subheader("Option Greeks")
+col1, col2 = st.columns(2)
+with col1:
+    st.write(f"**Delta (Call):** {delta_call:.4f}")
+    st.write(f"**Gamma (Call):** {gamma_call:.4f}")
+    st.write(f"**Vega (Call):** {vega_call:.4f}")
+    st.write(f"**Theta (Call):** {theta_call:.4f}")
+    st.write(f"**Rho (Call):** {rho_call:.4f}")
+with col2:
+    st.write(f"**Delta (Put):** {delta_put:.4f}")
+    st.write(f"**Gamma (Put):** {gamma_put:.4f}")
+    st.write(f"**Vega (Put):** {vega_put:.4f}")
+    st.write(f"**Theta (Put):** {theta_put:.4f}")
+    st.write(f"**Rho (Put):** {rho_put:.4f}")
 
 # Interactive Plot with Plotly
 x_call = np.linspace(C0 - 3 * SE_call, C0 + 3 * SE_call, 100)
