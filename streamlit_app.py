@@ -162,16 +162,19 @@ fig.add_trace(go.Scatter(x=x_put, y=y_put, mode='lines', name='Put Option', line
 fig.add_trace(go.Scatter(x=x_put, y=y_put, fill='tozeroy', fillcolor='rgba(244, 67, 54, 0.3)', mode='none'))
 
 # Vertical Lines
-fig.add_vline(x=C0, line=dict(color='#4CAF50', dash='dash'), annotation_text='Call Value', annotation_position='top left')
+fig.add_vline(x=C0, line=dict(color='#4CAF50', dash='dash'), annotation_text='Call Value', annotation_position='top right')
 fig.add_vline(x=P0, line=dict(color='#F44336', dash='dash'), annotation_text='Put Value', annotation_position='top left')
-fig.add_vline(x=market_value, line=dict(color='#2196F3'), annotation_text='Market Value', annotation_position='top left')
+fig.add_vline(x=market_value, line=dict(color='#2196F3'), annotation_text='Market Value', annotation_position='top right')
 
 # Improving the aesthetics
 fig.update_layout(title='Option Pricing Distribution',
                   xaxis_title='Option Price',
                   yaxis_title='Probability Density',
-                  legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
+                  legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, traceorder="normal"),
                   template='plotly_white',
                   margin=dict(l=50, r=50, t=50, b=50))
+
+# Update annotations to avoid overlap
+fig.update_annotations(dict(font_size=12, arrowcolor="rgba(0,0,0,0)"))
 
 st.plotly_chart(fig, use_container_width=True)
