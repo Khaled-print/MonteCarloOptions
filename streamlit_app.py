@@ -109,8 +109,8 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     profitable_puts_pct = profitable_puts / M * 100
 
     # Determine profitability points
-    call_profitability_point = K + C0
-    put_profitability_point = K - P0
+    call_profitability_point = K + (market_value / delta_call)
+    put_profitability_point = K - (market_value / delta_put)
 
     # Greeks Calculation
     delta_call = np.mean(ST[-1] > K)  # ∆ Call (approximated by the proportion of paths that end up ITM)
