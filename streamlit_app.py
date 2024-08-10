@@ -102,6 +102,12 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     itm_puts_pct = itm_puts / M * 100
     otm_puts_pct = otm_puts / M * 100
 
+    # Calculate profitability
+    profitable_calls = np.sum((ST[-1] - K) > C0)
+    profitable_puts = np.sum((K - ST[-1]) > P0)
+    profitable_calls_pct = profitable_calls / M * 100
+    profitable_puts_pct = profitable_puts / M * 100
+
     # Greeks Calculation
     delta_call = np.mean(ST[-1] > K)  # ∆ Call (approximated by the proportion of paths that end up ITM)
     delta_put = np.mean(ST[-1] < K)   # ∆ Put (approximated by the proportion of paths that end up ITM)
@@ -157,7 +163,7 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     P0_up = np.exp(-r_up * T) * np.sum(PT_up) / M
     rho_put = (P0_up - P0) / epsilon
 
-    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put
+    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, profitable_calls_pct, profitable_puts_pct
 
 # Sidebar for User Inputs
 st.sidebar.title("📊 Monte Carlo Model")
@@ -187,7 +193,7 @@ st.title("Monte Carlo Pricing Model with Greeks")
 # Calculate Call and Put values using Monte Carlo simulation
 results = monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, start_date, end_date)
 (C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, 
- delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put) = results
+ delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, profitable_calls_pct, profitable_puts_pct) = results
 
 # Display Call and Put Values with Standard Errors in colored tables
 col1, col2 = st.columns(2)
@@ -216,6 +222,11 @@ with col2:
 with st.expander("In the Money (ITM) and Out of the Money (OTM) Percentages", expanded=False):
     st.write(f"**Call Options:** ITM: {itm_calls_pct:.2f}%, OTM: {otm_calls_pct:.2f}%")
     st.write(f"**Put Options:** ITM: {itm_puts_pct:.2f}%, OTM: {otm_puts_pct:.2f}%")
+
+# Profitability details in an expander
+with st.expander("Profitability Percentages", expanded=False):
+    st.write(f"**Profitable Call Options:** {profitable_calls_pct:.2f}%")
+    st.write(f"**Profitable Put Options:** {profitable_puts_pct:.2f}%")
 
 # Display Market Value for comparison
 st.write(f"Market Value of the Option: ${market_value:.2f}")
