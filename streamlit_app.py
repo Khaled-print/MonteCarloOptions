@@ -88,13 +88,13 @@ def monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end
     sigma_put = np.sqrt(np.sum((PT - P0)**2) / (M - 1))
     SE_put = sigma_put / np.sqrt(M)
 
-    # Calculate ITM and OTM
-    itm_calls = np.sum(ST[-1] > K)
-    otm_calls = np.sum(ST[-1] <= K)
-    itm_puts = np.sum(ST[-1] < K)
-    otm_puts = np.sum(ST[-1] >= K)
+    # Calculate ITM and OTM as percentages
+    itm_calls_pct = itm_calls / M * 100
+    otm_calls_pct = otm_calls / M * 100
+    itm_puts_pct = itm_puts / M * 100
+    otm_puts_pct = otm_puts / M * 100
 
-    return C0, SE_call, P0, SE_put, itm_calls, otm_calls, itm_puts, otm_puts
+    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct
 
 # Sidebar for User Inputs
 st.sidebar.title("📊 Monte Carlo Model")
@@ -122,7 +122,7 @@ with st.sidebar.expander("Dates", expanded=False):
 st.title("Monte Carlo Pricing Model")
 
 # Calculate Call and Put values using Monte Carlo simulation
-C0, SE_call, P0, SE_put, itm_calls, otm_calls, itm_puts, otm_puts = monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date)
+C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct = monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end_date)
 
 # Display Call and Put Values with Standard Errors in colored tables
 col1, col2 = st.columns(2)
@@ -147,10 +147,10 @@ with col2:
         </div>
     """, unsafe_allow_html=True)
 
-# Display ITM and OTM
-st.subheader("In the Money (ITM) and Out of the Money (OTM) Counts")
-st.write(f"**Call Options:** ITM: {itm_calls}, OTM: {otm_calls}")
-st.write(f"**Put Options:** ITM: {itm_puts}, OTM: {otm_puts}")
+# ITM and OTM details in an expander
+with st.expander("In the Money (ITM) and Out of the Money (OTM) Percentages", expanded=False):
+    st.write(f"**Call Options:** ITM: {itm_calls_pct:.2f}%, OTM: {otm_calls_pct:.2f}%")
+    st.write(f"**Put Options:** ITM: {itm_puts_pct:.2f}%, OTM: {otm_puts_pct:.2f}%")
 
 # Display Market Value for comparison
 st.write(f"Market Value of the Option: ${market_value:.2f}")
@@ -186,4 +186,3 @@ fig.update_layout(title='Option Pricing Distribution',xaxis_title='Option Price'
 fig.update_annotations(dict(font_size=12, arrowcolor="rgba(0,0,0,0)"))
 
 st.plotly_chart(fig, use_container_width=True)
-
