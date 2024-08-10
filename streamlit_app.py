@@ -1,8 +1,11 @@
 import streamlit as st
+import pandas as pd
 import numpy as np
-import datetime
+from scipy.stats import norm
+import plotly.graph_objects as go
+from numpy import log, sqrt, exp  # Make sure to import these
 import matplotlib.pyplot as plt
-import scipy.stats as stats
+import seaborn as sns
 
 #######################
 # Page configuration
