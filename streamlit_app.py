@@ -108,9 +108,9 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     profitable_calls_pct = profitable_calls / M * 100
     profitable_puts_pct = profitable_puts / M * 100
 
-    # Determine profitability points
-    call_profitability_point = K + (market_value / delta_call)
-    put_profitability_point = K - (market_value / delta_put)
+    # Breakeven or profitability points
+    call_profitability_point = K + C0
+    put_profitability_point = K - P0
 
     # Greeks Calculation
     delta_call = np.mean(ST[-1] > K)  # ∆ Call (approximated by the proportion of paths that end up ITM)
@@ -181,14 +181,14 @@ st.sidebar.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decor
 # Using expanders to make the interface less compact
 with st.sidebar.expander("Option Parameters", expanded=True):
     S = st.number_input("Current Asset Price", value=100.0)
-    K = st.number_input("Strike Price", value=100.0)
-    vol = st.number_input("Volatility (σ)", value=0.2)
+    K = st.number_input("Strike Price", value=105.0)
+    vol = st.number_input("Volatility (σ)", value=0.20)
     r = st.number_input("Risk-Free Interest Rate", value=0.03)
 
 with st.sidebar.expander("Simulation Parameters", expanded=False):
     N = st.number_input("Number of Time Steps (N)", value=252, step=1)
-    M = st.number_input("Number of Simulations (M)", value=500, step=100)
-    market_value = st.number_input("Market Value of Option", value=10.0)
+    M = st.number_input("Number of Simulations (M)", value=1000, step=100)
+    market_value = st.number_input("Market Value of Option", value=7.50)
 
 with st.sidebar.expander("Dates", expanded=False):
     start_date = st.date_input("Start Date", datetime.date(2024, 1, 1))
