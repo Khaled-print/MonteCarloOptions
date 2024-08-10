@@ -95,6 +95,10 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     profit_call = CT - market_value
     profit_put = PT - market_value
 
+    # Calculate the average ideal entry point where profit becomes positive
+    ideal_entry_call = np.mean(ST[-1][profit_call > 0])
+    ideal_entry_put = np.mean(ST[-1][profit_put > 0])
+
     # Calculate ITM and OTM counts
     itm_calls = np.sum(ST[-1] > K)
     otm_calls = np.sum(ST[-1] <= K)
@@ -162,7 +166,7 @@ def monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, sta
     P0_up = np.exp(-r_up * T) * np.sum(PT_up) / M
     rho_put = (P0_up - P0) / epsilon
 
-    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, profit_call, profit_put
+    return C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, profit_call, profit_put, ideal_entry_call, ideal_entry_put
 
 # Sidebar for User Inputs
 st.sidebar.title("📊 Monte Carlo Model")
@@ -196,7 +200,7 @@ st.title("Monte Carlo Pricing Model with Greeks")
 results = monte_carlo_option_pricing_with_greeks(S, K, vol, r, N, M, market_value, start_date, end_date)
 (C0, SE_call, P0, SE_put, itm_calls_pct, otm_calls_pct, itm_puts_pct, otm_puts_pct, 
  delta_call, delta_put, gamma_call, gamma_put, vega_call, vega_put, theta_call, theta_put, rho_call, rho_put, 
- profit_call, profit_put) = results
+ profit_call, profit_put, ideal_entry_call, ideal_entry_put) = results
 
 # Display Call and Put Values with Standard Errors in colored tables
 col1, col2 = st.columns(2)
@@ -211,6 +215,8 @@ with col1:
         </div>
     """, unsafe_allow_html=True)
 
+    st.write(f"**Ideal Entry Price (Call):** ${ideal_entry_call:.2f}")
+
 with col2:
     st.markdown(f"""
         <div class="metric-container metric-put">
@@ -220,6 +226,8 @@ with col2:
             </div>
         </div>
     """, unsafe_allow_html=True)
+
+    st.write(f"**Ideal Entry Price (Put):** ${ideal_entry_put:.2f}")
 
 # ITM and OTM details in an expander
 with st.expander("In the Money (ITM) and Out of the Money (OTM) Percentages", expanded=False):
