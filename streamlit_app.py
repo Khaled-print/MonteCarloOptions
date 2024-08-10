@@ -1,13 +1,14 @@
 import streamlit as st
 import numpy as np
 import datetime
-import plotly.graph_objs as go
+import matplotlib.pyplot as plt
 import scipy.stats as stats
+import plotly.graph_objs as go
 
 #######################
 # Page configuration
 st.set_page_config(
-    page_title="Monte Carlo Option Pricing",
+    page_title="Interactive Monte Carlo Option Pricing",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded")
@@ -20,9 +21,9 @@ st.markdown("""
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 16px;
-    width: auto;
-    margin: 20px auto;
+    padding: 12px;
+    width: 100%;
+    margin: 10px 0;
 }
 
 /* Custom classes for CALL and PUT values */
@@ -41,7 +42,7 @@ st.markdown("""
 
 /* Style for the value text */
 .metric-value {
-    font-size: 2rem;
+    font-size: 1.7rem;
     font-weight: bold;
     margin: 0;
 }
@@ -49,7 +50,7 @@ st.markdown("""
 /* Style for the label text */
 .metric-label {
     font-size: 1.2rem;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -91,30 +92,26 @@ def monte_carlo_option_pricing(S, K, vol, r, N, M, market_value, start_date, end
     return C0, SE_call, P0, SE_put
 
 # Sidebar for User Inputs
-with st.sidebar:
-    st.title("📊 Monte Carlo Model")
-    st.write("`Created by:`")
-    linkedin_url = "www.linkedin.com/in/khaled-sahbi-161329200"
-    st.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decoration: none; color: inherit;"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="25" height="25" style="vertical-align: middle; margin-right: 10px;">`Khaled Sahbi`</a>', unsafe_allow_html=True)
+st.sidebar.title("📊 Monte Carlo Model")
+st.sidebar.write("`Created by:`")
+linkedin_url = "www.linkedin.com/in/khaled-sahbi-161329200"
+st.sidebar.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decoration: none; color: inherit;"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="25" height="25" style="vertical-align: middle; margin-right: 10px;">`Khaled Sahbi`</a>', unsafe_allow_html=True)
 
-    # Updated realistic default values
-    S = st.number_input("Current Asset Price", value=150.0)
-    K = st.number_input("Strike Price", value=155.0)
-    vol = st.number_input("Volatility (σ)", value=0.2)
-    r = st.number_input("Risk-Free Interest Rate", value=0.05)
-    N = st.number_input("Number of Time Steps (N)", value=252, min_value=1)  # typical for 1 year of trading days
-    M = st.number_input("Number of Simulations (M)", value=10000, min_value=1)
+# Using expanders to make the interface less compact
+with st.sidebar.expander("Option Parameters", expanded=True):
+    S = st.slider("Current Asset Price", min_value=50.0, max_value=200.0, value=150.0, step=1.0)
+    K = st.slider("Strike Price", min_value=50.0, max_value=200.0, value=155.0, step=1.0)
+    vol = st.slider("Volatility (σ)", min_value=0.01, max_value=1.0, value=0.2, step=0.01)
+    r = st.slider("Risk-Free Interest Rate", min_value=0.0, max_value=0.2, value=0.05, step=0.01)
+
+with st.sidebar.expander("Simulation Parameters", expanded=False):
+    N = st.slider("Number of Time Steps (N)", min_value=1, max_value=365, value=252, step=1)
+    M = st.slider("Number of Simulations (M)", min_value=1000, max_value=50000, value=10000, step=1000)
     market_value = st.number_input("Market Value of Option", value=10.0)
 
-    start_year = st.number_input("Start Year", value=2024)
-    start_month = st.number_input("Start Month", value=1, min_value=1, max_value=12)
-    start_day = st.number_input("Start Day", value=1, min_value=1, max_value=31)
-    end_year = st.number_input("End Year", value=2025)
-    end_month = st.number_input("End Month", value=1, min_value=1, max_value=12)
-    end_day = st.number_input("End Day", value=1, min_value=1, max_value=31)
-
-    start_date = datetime.date(start_year, start_month, start_day)
-    end_date = datetime.date(end_year, end_month, end_day)
+with st.sidebar.expander("Dates", expanded=False):
+    start_date = st.date_input("Start Date", datetime.date(2024, 1, 1))
+    end_date = st.date_input("End Date", datetime.date(2025, 1, 1))
 
 # Main Page for Output Display
 st.title("Monte Carlo Pricing Model")
@@ -148,31 +145,33 @@ with col2:
 # Display Market Value for comparison
 st.write(f"Market Value of the Option: ${market_value:.2f}")
 
-# Generate a range of stock prices and volatilities
-S_range = np.linspace(S * 0.8, S * 1.2, 50)
-vol_range = np.linspace(vol * 0.5, vol * 1.5, 50)
+# Interactive Plot with Plotly
+x_call = np.linspace(C0 - 3 * SE_call, C0 + 3 * SE_call, 100)
+y_call = stats.norm.pdf(x_call, C0, SE_call)
 
-# Prepare data for the 3D plot
-C0_surface = np.zeros((len(S_range), len(vol_range)))
+x_put = np.linspace(P0 - 3 * SE_put, P0 + 3 * SE_put, 100)
+y_put = stats.norm.pdf(x_put, P0, SE_put)
 
-for i, S_val in enumerate(S_range):
-    for j, vol_val in enumerate(vol_range):
-        C0_temp, _, _, _ = monte_carlo_option_pricing(S_val, K, vol_val, r, N, M, market_value, start_date, end_date)
-        C0_surface[i, j] = C0_temp
+fig = go.Figure()
 
-# Create 3D surface plot
-fig = go.Figure(data=[go.Surface(z=C0_surface, x=S_range, y=vol_range, colorscale='Viridis')])
+# Call Option Plot
+fig.add_trace(go.Scatter(x=x_call, y=y_call, mode='lines', name='Call Option', line=dict(color='#4CAF50', width=2)))
+fig.add_trace(go.Scatter(x=x_call, y=y_call, fill='tozeroy', fillcolor='rgba(76, 175, 80, 0.3)', mode='none'))
 
-fig.update_layout(
-    title='Call Option Price Surface',
-    scene=dict(
-        xaxis_title='Stock Price (S)',
-        yaxis_title='Volatility (σ)',
-        zaxis_title='Call Option Price (C0)'
-    ),
-    autosize=True,
-    margin=dict(l=65, r=50, b=65, t=90)
-)
+# Put Option Plot
+fig.add_trace(go.Scatter(x=x_put, y=y_put, mode='lines', name='Put Option', line=dict(color='#F44336', width=2)))
+fig.add_trace(go.Scatter(x=x_put, y=y_put, fill='tozeroy', fillcolor='rgba(244, 67, 54, 0.3)', mode='none'))
 
-# Display the 3D plot in Streamlit
-st.plotly_chart(fig)
+# Vertical Lines
+fig.add_vline(x=C0, line=dict(color='#4CAF50', dash='dash'), annotation_text='Call Value', annotation_position='top left')
+fig.add_vline(x=P0, line=dict(color='#F44336', dash='dash'), annotation_text='Put Value', annotation_position='top left')
+fig.add_vline(x=market_value, line=dict(color='#2196F3'), annotation_text='Market Value', annotation_position='top left')
+
+# Improving the aesthetics
+fig.update_layout(title='Option Pricing Distribution',
+                  xaxis_title='Option Price',
+                  yaxis_title='Probability Density',
+                  legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
+                  template='plotly_white')
+
+st.plotly_chart(fig, use_container_width=True)
