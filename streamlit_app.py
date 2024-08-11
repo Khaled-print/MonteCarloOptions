@@ -182,7 +182,7 @@ with st.sidebar.expander("Option Parameters", expanded=True):
 with st.sidebar.expander("Simulation Parameters", expanded=False):
     N = st.number_input("Number of Time Steps (N)", value=252, step=1)
     M = st.number_input("Number of Simulations (M)", value=500, step=100)
-    market_value = st.number_input("Market Value of Option", value=10.0)
+    market_value = st.number_input("Market Value of Option", value=7.5)
 
 with st.sidebar.expander("Dates", expanded=False):
     start_date = st.date_input("Start Date", datetime.date(2024, 1, 1))
