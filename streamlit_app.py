@@ -236,20 +236,21 @@ with st.expander("In the Money (ITM) and Out of the Money (OTM) Percentages", ex
 st.write(f"Market Value of the Option: ${market_value:.2f}")
 
 # Display Greeks
-st.subheader("Option Greeks")
-col1, col2 = st.columns(2)
-with col1:
-    st.write(f"**Delta (Call):** {delta_call:.4f}")
-    st.write(f"**Gamma (Call):** {gamma_call:.4f}")
-    st.write(f"**Vega (Call):** {vega_call:.4f}")
-    st.write(f"**Theta (Call):** {theta_call:.4f}")
-    st.write(f"**Rho (Call):** {rho_call:.4f}")
-with col2:
-    st.write(f"**Delta (Put):** {delta_put:.4f}")
-    st.write(f"**Gamma (Put):** {gamma_put:.4f}")
-    st.write(f"**Vega (Put):** {vega_put:.4f}")
-    st.write(f"**Theta (Put):** {theta_put:.4f}")
-    st.write(f"**Rho (Put):** {rho_put:.4f}")
+with st.expander("Greeks Call & Put Value Calculations", expanded=False):
+    st.subheader("Option Greeks")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(f"**Delta (Call):** {delta_call:.4f}")
+        st.write(f"**Gamma (Call):** {gamma_call:.4f}")
+        st.write(f"**Vega (Call):** {vega_call:.4f}")
+        st.write(f"**Theta (Call):** {theta_call:.4f}")
+        st.write(f"**Rho (Call):** {rho_call:.4f}")
+    with col2:
+        st.write(f"**Delta (Put):** {delta_put:.4f}")
+        st.write(f"**Gamma (Put):** {gamma_put:.4f}")
+        st.write(f"**Vega (Put):** {vega_put:.4f}")
+        st.write(f"**Theta (Put):** {theta_put:.4f}")
+        st.write(f"**Rho (Put):** {rho_put:.4f}")
 
 # Display the selected plot type
 if plot_type == "Option Pricing Distribution":
