@@ -235,7 +235,7 @@ with st.expander("In the Money (ITM) and Out of the Money (OTM) Percentages", ex
 # Display Market Value for comparison
 st.write(f"Market Value of the Option: ${market_value:.2f}")
 
-# Display Greeks
+# Display Greeks in an expander
 with st.expander("Greeks Call & Put Value Calculations", expanded=False):
     st.subheader("Option Greeks")
     col1, col2 = st.columns(2)
